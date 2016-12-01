@@ -1,0 +1,10 @@
+version: '2'
+services:  
+  zabbix:
+    build: .         
+    container_name: ZabbixServer
+    volumes:
+      - .\Banco:/var/lib/mysql
+    ports:
+      - "8080:80"
+   
