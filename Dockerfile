@@ -31,7 +31,7 @@ RUN echo '#!/bin/bash' > zabbix_start.sh && \
 	echo "mysql -uroot -pBolinha123 -e 'create database zabbix character set utf8 collate utf8_bin' " >> zabbix_start.sh && \
 	echo "zcat  /usr/share/doc/zabbix-server-mysql/create.sql.gz | mysql -uroot -pBolinha123 -B zabbix" >> zabbix_start.sh && \
 	echo "fi;" >> zabbix_start.sh && \
-	echo "/usr/sbin/service mysql start" >> zabbix_start.sh && \
+	echo "/usr/sbin/service mysql restart" >> zabbix_start.sh && \
 	echo "grant all privileges on zabbix.* to zabbix@localhost identified by 'zabbix'" >> b.txt && \
 	echo 'mysql -uroot -pBolinha123 < b.txt' >> zabbix_start.sh && \
 	echo "/usr/sbin/service apache2 start" >> zabbix_start.sh && \
@@ -50,7 +50,8 @@ RUN	apt-get -y install snmp snmpd && \
 	sed -i 's/mibs :/mibs +/' /etc/snmp/snmp.conf && \
 	echo "deb http://ftp.br.debian.org/debian/ wheezy main contrib non-free" >> /etc/apt/sources.list && \
 	echo "deb-src http://ftp.br.debian.org/debian/ wheezy main contrib non-free" >>/etc/apt/sources.list && \
-	apt-get update && apt-get install snmp-mibs-downloader  --allow-unauthenticated -y
+	apt-get update && apt-get install snmp-mibs-downloader  --allow-unauthenticated -y && \
+	rm -rf /var/lib/apt/lists/* 
 #Zabbix.config
 RUN echo "<?php" >/usr/share/zabbix/conf/zabbix.conf.php && \
 	echo "// Zabbix GUI configuration file." >> /usr/share/zabbix/conf/zabbix.conf.php && \
@@ -68,10 +69,9 @@ RUN echo "<?php" >/usr/share/zabbix/conf/zabbix.conf.php && \
 	echo "\$ZBX_SERVER_NAME = 'zabbix';" >> /usr/share/zabbix/conf/zabbix.conf.php && \
 	echo "\$IMAGE_FORMAT_DEFAULT = IMAGE_FORMAT_PNG;" >> /usr/share/zabbix/conf/zabbix.conf.php
 #Copy of database
-RUN cp -R /var/lib/mysql    /var/lib/mysqlb
-
-
-
+RUN cp -R /var/lib/mysql    /var/lib/mysqlb && \
+	rm -rf /var/lib/apt/lists/* 
+	
 
 
 CMD ./zabbix_start.sh
