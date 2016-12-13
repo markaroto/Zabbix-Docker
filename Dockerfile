@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install wget -y && \
 #Install mysql
 RUN echo "mysql-server mysql-server/root_password password Bolinha123" | debconf-set-selections && \
 	echo "mysql-server mysql-server/root_password_again password Bolinha123" | debconf-set-selections && \
-	apt-get -y install mysql-server
+	apt-get -y install mysql-server traceroute net-tools nmap
 #Install  zabbix
 RUN apt-get install zabbix-server-mysql zabbix-frontend-php zabbix-agent zabbix-get -y && \
 	apt-get install php-xmlwriter php-xmlreader php-mbstring php-bcmath -y && \
@@ -31,22 +31,26 @@ RUN echo '#!/bin/bash' > zabbix_start.sh && \
 	echo "mysql -uroot -pBolinha123 -e 'create database zabbix character set utf8 collate utf8_bin' " >> zabbix_start.sh && \
 	echo "zcat  /usr/share/doc/zabbix-server-mysql/create.sql.gz | mysql -uroot -pBolinha123 -B zabbix" >> zabbix_start.sh && \
 	echo "fi;" >> zabbix_start.sh && \
+	echo "if [ ! -f /etc/zabbix/zabbix_server.conf ]; then " >> zabbix_start.sh && \
+	echo "cp -Rf /etc/zabbixbk/* /etc/zabbix" >> zabbix_start.sh && \
+	echo "fi;" >> zabbix_start.sh && \	
 	echo "/usr/sbin/service mysql restart" >> zabbix_start.sh && \
 	echo "grant all privileges on zabbix.* to zabbix@localhost identified by 'zabbix'" >> b.txt && \
 	echo 'mysql -uroot -pBolinha123 < b.txt' >> zabbix_start.sh && \
 	echo "/usr/sbin/service apache2 start" >> zabbix_start.sh && \
 	echo "/usr/sbin/service zabbix-server start" >> zabbix_start.sh && \
 	echo "/usr/sbin/service zabbix-agent start" >> zabbix_start.sh && \
-	echo "c=1" >> zabbix_start.sh && \
-	echo "while [ \$c -le 5 ]" >> zabbix_start.sh && \
-	echo "do" >> zabbix_start.sh && \
-	echo "echo 'ok';" >> zabbix_start.sh && \
-	echo "sleep 5000" >> zabbix_start.sh && \
-	echo "done" >> zabbix_start.sh && \
+	echo "tail -f /var/log/zabbix/zabbix_server.log"  >> zabbix_start.sh && \
+#	echo "c=1" >> zabbix_start.sh && \
+#	echo "while [ \$c -le 5 ]" >> zabbix_start.sh && \
+#	echo "do" >> zabbix_start.sh && \
+#	echo "echo 'ok';" >> zabbix_start.sh && \
+#	echo "sleep 5000" >> zabbix_start.sh && \
+#	echo "done" >> zabbix_start.sh && \
 	chmod +x  zabbix_start.sh 
 
 #install snmp configuration	
-RUN	apt-get -y install snmp snmpd && \
+RUN	apt-get -y install snmp snmpd iputils-ping && \
 	sed -i 's/mibs :/mibs +/' /etc/snmp/snmp.conf && \
 	echo "deb http://ftp.br.debian.org/debian/ wheezy main contrib non-free" >> /etc/apt/sources.list && \
 	echo "deb-src http://ftp.br.debian.org/debian/ wheezy main contrib non-free" >>/etc/apt/sources.list && \
@@ -70,6 +74,7 @@ RUN echo "<?php" >/usr/share/zabbix/conf/zabbix.conf.php && \
 	echo "\$IMAGE_FORMAT_DEFAULT = IMAGE_FORMAT_PNG;" >> /usr/share/zabbix/conf/zabbix.conf.php
 #Copy of database
 RUN cp -R /var/lib/mysql    /var/lib/mysqlb && \
+	cp -R /etc/zabbix /etc/zabbixbk && \
 	rm -rf /var/lib/apt/lists/* 
 	
 

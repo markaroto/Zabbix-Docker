@@ -5,6 +5,8 @@ services:
     container_name: ZabbixServer
     volumes:
       - .\Banco:/var/lib/mysql
+      - .\zabbix_config:/etc/zabbix
     ports:
-      - "8080:80"
+      - "80:80"
+      - "10051:10051"
    
